@@ -1,0 +1,12 @@
+{
+	"name": "AzureSqlTableds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabaseds",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}
