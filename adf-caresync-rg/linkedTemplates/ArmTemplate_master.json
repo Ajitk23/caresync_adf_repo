@@ -11,9 +11,25 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'caresyncstoragegen2LS'"
 		},
+		"AzureDatabricksLS_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "1120-195042-qv1k0t5u"
+		},
 		"AzureKeyVaultLS_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://caresync-rg-keyvault.vault.azure.net/"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlservercarsync.database.windows.net"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "Aajjiitt11"
 		},
 		"PostgreSqlLS_properties_typeProperties_server": {
 			"type": "string",
@@ -66,6 +82,18 @@
 					},
 					"caresyncstoragegen2LS_properties_typeProperties_url": {
 						"value": "[parameters('caresyncstoragegen2LS_properties_typeProperties_url')]"
+					},
+					"AzureDatabricksLS_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('AzureDatabricksLS_properties_typeProperties_existingClusterId')]"
+					},
+					"AzureSqlDatabaseds_properties_typeProperties_server": {
+						"value": "[parameters('AzureSqlDatabaseds_properties_typeProperties_server')]"
+					},
+					"AzureSqlDatabaseds_properties_typeProperties_database": {
+						"value": "[parameters('AzureSqlDatabaseds_properties_typeProperties_database')]"
+					},
+					"AzureSqlDatabaseds_properties_typeProperties_userName": {
+						"value": "[parameters('AzureSqlDatabaseds_properties_typeProperties_userName')]"
 					},
 					"PostgreSqlLS_properties_typeProperties_server": {
 						"value": "[parameters('PostgreSqlLS_properties_typeProperties_server')]"

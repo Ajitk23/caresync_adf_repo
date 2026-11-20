@@ -8,8 +8,20 @@
 		"caresyncstoragegen2LS_accountKey": {
 			"value": ""
 		},
+		"AzureDatabricksLS_properties_typeProperties_existingClusterId": {
+			"value": "1120-195042-qv1k0t5u"
+		},
 		"AzureKeyVaultLS_properties_typeProperties_baseUrl": {
 			"value": "https://caresync-rg-keyvault.vault.azure.net/"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_server": {
+			"value": "sqlservercarsync.database.windows.net"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_database": {
+			"value": "sqldb"
+		},
+		"AzureSqlDatabaseds_properties_typeProperties_userName": {
+			"value": "Aajjiitt11"
 		},
 		"PostgreSqlLS_properties_typeProperties_server": {
 			"value": "ep-twilight-waterfall-aok75v22-pooler.c-2.ap-southeast-1.aws.neon.tech"
