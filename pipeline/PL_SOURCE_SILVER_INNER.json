@@ -49,78 +49,11 @@
 				}
 			},
 			{
-				"name": "source to landing ingestion",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "check load type",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 2,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "PostgreSqlV2Source",
-						"query": {
-							"value": "@concat(\n    'SELECT * FROM PUBLIC.',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    if(\n        equals(activity('Read Table Details').output.firstRow.load_type, 'FULL'),\n        '',\n        concat(\n            ' WHERE ',\n            activity('Read Table Details').output.firstRow.watermark_column,\n            ' > ',\n            '''',\n            variables('watermarkvalue'),\n            ''''\n        )\n    )\n)",
-							"type": "Expression"
-						},
-						"queryTimeout": "02:00:00"
-					},
-					"sink": {
-						"type": "ParquetSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						},
-						"formatSettings": {
-							"type": "ParquetWriteSettings"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "PostgreSqlds",
-						"type": "DatasetReference"
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "gen2adlsds",
-						"type": "DatasetReference",
-						"parameters": {
-							"container": "landing",
-							"directory": {
-								"value": "@concat(\n    activity('Read Table Details').output.firstRow.source_system,\n    '/',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    '/',\n    variables('starttime')\n)",
-								"type": "Expression"
-							}
-						}
-					}
-				]
-			},
-			{
 				"name": "LandingToBronze",
 				"type": "DatabricksNotebook",
 				"dependsOn": [
 					{
-						"activity": "source to landing ingestion",
+						"activity": "action according to source_system",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -362,6 +295,113 @@
 								],
 								"scriptBlockExecutionTimeout": "02:00:00"
 							}
+						}
+					]
+				}
+			},
+			{
+				"name": "action according to source_system",
+				"type": "Switch",
+				"dependsOn": [
+					{
+						"activity": "check load type",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@activity('Read Table Details').output.firstRow.source_system",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "neon_postgres",
+							"activities": [
+								{
+									"name": "source to landing ingestion",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "PostgreSqlV2Source",
+											"query": {
+												"value": "@concat(\n    'SELECT * FROM PUBLIC.',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    if(\n        equals(activity('Read Table Details').output.firstRow.load_type, 'FULL'),\n        '',\n        concat(\n            ' WHERE ',\n            activity('Read Table Details').output.firstRow.watermark_column,\n            ' > ',\n            '''',\n            variables('watermarkvalue'),\n            ''''\n        )\n    )\n)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "PostgreSqlds",
+											"type": "DatasetReference"
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "gen2adlsds",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "landing",
+												"directory": {
+													"value": "@concat(\n    activity('Read Table Details').output.firstRow.source_system,\n    '/',\n    activity('Read Table Details').output.firstRow.source_table_name,\n    '/',\n    variables('starttime')\n)",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						},
+						{
+							"value": "adls_csv",
+							"activities": [
+								{
+									"name": "Copy data from ADLS Gen2",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"enableStaging": false
+									}
+								}
+							]
 						}
 					]
 				}
