@@ -459,6 +459,23 @@
 										],
 										"scriptBlockExecutionTimeout": "02:00:00"
 									}
+								},
+								{
+									"name": "Update pipeline as Failed",
+									"type": "Fail",
+									"dependsOn": [
+										{
+											"activity": "Silver To Gold",
+											"dependencyConditions": [
+												"Failed"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "PL_SILVER_TO_GOLD is Failed",
+										"errorCode": "500"
+									}
 								}
 							]
 						}
