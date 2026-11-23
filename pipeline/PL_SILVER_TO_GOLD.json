@@ -28,7 +28,7 @@
 						"referenceName": "AzureSqlTableds",
 						"type": "DatasetReference"
 					},
-					"firstRowOnly": true
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -45,7 +45,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('ReadSourceTableList').output.firstRow",
+						"value": "@activity('ReadSourceTableList').output.value",
 						"type": "Expression"
 					},
 					"isSequential": true,
