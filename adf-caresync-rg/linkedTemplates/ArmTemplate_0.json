@@ -1267,7 +1267,7 @@
 						}
 					},
 					{
-						"name": "SILVER TO GOLD",
+						"name": "SILVER TO GOLD PL",
 						"type": "ExecutePipeline",
 						"dependsOn": [
 							{
