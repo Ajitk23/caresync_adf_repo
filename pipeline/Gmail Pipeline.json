@@ -1,0 +1,150 @@
+{
+	"name": "Gmail Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Table output",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "AzureSqlDatabaseds",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "SELECT count(*) AS error_count FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().RunId}'\nAND status != 'SUCCESS';",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "receiver",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "receiveraddress",
+					"value": {
+						"value": "@pipeline().globalParameters.receiver",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "WebHTTP",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Table output",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "receiver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set header",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Footer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-12.northcentralus.logic.azure.com:443/workflows/8f00ab36bf4f4a68924d30beb6d650ee/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=DT0EHb7z7G2opjll4kGOJeCYa07Tc-80BnSX3QhWJHQ",
+					"body": {
+						"value": "{\n    \"Header\" : \"@{variables('header')}\",\n    \"Footer\" : \"@{variables('footer')}\",\n    \"Azure DataFactory Name\" : \"@{pipeline().DataFactory}\",\n    \"Receiver Address\" : \"@{pipeline().globalParameters.receiver}\",\n    \"pipeline Name\" : \"@{pipeline().Pipeline}\",\n    \"Pipeline RunID\" : \"@{pipeline().RunId}\",\n    \"pipeline Status\" : \"SUCCESS\",\n    \"Status Record Time\" : \"@{utcNow()}\",\n    \"Fail Record\" : \"@{activity('Table output').output.record_count}\"\n}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set header",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "header",
+					"value": {
+						"value": "Hello,\n\nPlease look into the below details.",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Footer",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "footer",
+					"value": {
+						"value": "For Any Queries please contact to @{pipeline().globalParameters.receiver}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pipelinerunid": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"receiveraddress": {
+				"type": "String"
+			},
+			"header": {
+				"type": "String"
+			},
+			"footer": {
+				"type": "String"
+			}
+		},
+		"annotations": []
+	}
+}
