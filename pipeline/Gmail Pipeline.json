@@ -3,35 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Table output",
-				"type": "Script",
-				"dependsOn": [],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 2,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "AzureSqlDatabaseds",
-					"type": "LinkedServiceReference"
-				},
-				"typeProperties": {
-					"scripts": [
-						{
-							"type": "Query",
-							"text": {
-								"value": "SELECT count(*) AS error_count FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().RunId}'\nAND status != 'SUCCESS';",
-								"type": "Expression"
-							}
-						}
-					],
-					"scriptBlockExecutionTimeout": "02:00:00"
-				}
-			},
-			{
 				"name": "receiver",
 				"type": "SetVariable",
 				"dependsOn": [],
@@ -52,12 +23,6 @@
 				"name": "WebHTTP",
 				"type": "WebActivity",
 				"dependsOn": [
-					{
-						"activity": "Table output",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
 					{
 						"activity": "receiver",
 						"dependencyConditions": [
@@ -106,7 +71,7 @@
 				"typeProperties": {
 					"variableName": "header",
 					"value": {
-						"value": "Hello,\n\nPlease look into the below details.",
+						"value": "Ingestion and TRansformation process for caresync project has been completed and below is the status",
 						"type": "Expression"
 					}
 				}
@@ -123,9 +88,38 @@
 				"typeProperties": {
 					"variableName": "footer",
 					"value": {
-						"value": "For Any Queries please contact to @{pipeline().globalParameters.receiver}",
+						"value": "For any support please contact to @{pipeline().globalParameters.receiver}",
 						"type": "Expression"
 					}
+				}
+			},
+			{
+				"name": "Read All tables status",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT * FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().parameters.pipelinerunid}';",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlTableds",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
 				}
 			}
 		],
