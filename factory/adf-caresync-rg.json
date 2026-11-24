@@ -1,0 +1,12 @@
+{
+	"name": "adf-caresync-rg",
+	"properties": {
+		"globalParameters": {
+			"receiver": {
+				"type": "string",
+				"value": "kumarajitsahoo.@gmail.com"
+			}
+		}
+	},
+	"location": "centralindia"
+}
