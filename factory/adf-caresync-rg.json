@@ -5,6 +5,10 @@
 			"receiver": {
 				"type": "string",
 				"value": "kumarajitsahoo.@gmail.com"
+			},
+			"ENV": {
+				"type": "string",
+				"value": "DEV"
 			}
 		}
 	},
