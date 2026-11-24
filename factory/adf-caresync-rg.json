@@ -9,6 +9,10 @@
 			"ENV": {
 				"type": "string",
 				"value": "DEV"
+			},
+			"Logic App URL": {
+				"type": "string",
+				"value": "https://prod-12.northcentralus.logic.azure.com:443/workflows/8f00ab36bf4f4a68924d30beb6d650ee/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=DT0EHb7z7G2opjll4kGOJeCYa07Tc-80BnSX3QhWJHQ"
 			}
 		}
 	},
