@@ -209,9 +209,9 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "body",
+					"variableName": "",
 					"value": {
-						"value": "{\n    \"subject\" : \"@{variables('email_subject')}\",\n    \"email_recipent\" : \"@{variables('receiveraddress')}\",\n    \"body_header\" : \"@{variables('header')}\",\n    \"body_footer\" : \"@{variables('footer')}\",\n    \"status_table\" : @{activity('Read All tables status').output.value}\n}",
+						"value": "{\n    \"subject\" : \"@{variables('email_subject')}\",\n    \"email_recipent\" : \"@{variables('receiveraddress')}\",\n    \"body_header\" : \"@{variables('header')}\",\n    \"body_footer\" : \"@{variables('footer')}\",\n    \"status_table\" : \"@{activity('Read All tables status').output.value}\"\n}",
 						"type": "Expression"
 					}
 				}
