@@ -53,6 +53,260 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Gmail Pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "receiver",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "receiveraddress",
+							"value": {
+								"value": "@pipeline().globalParameters.receiver",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "WebHTTP",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Logic App body",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {
+								"Content-Type": "application/json"
+							},
+							"url": {
+								"value": "@pipeline().globalParameters.LogicAppURL",
+								"type": "Expression"
+							},
+							"body": {
+								"value": "@variables('body')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set header",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "header",
+							"value": {
+								"value": "Ingestion and TRansformation process for caresync project has been completed and below is the status",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Footer",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "footer",
+							"value": {
+								"value": "For any support please contact to @{pipeline().globalParameters.receiver}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Read All tables status",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().parameters.pipelinerunid}';",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTableds",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Email Subject",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Check overall failed count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "email_subject",
+							"value": {
+								"value": "@{pipeline().globalParameters.ENV} || @{\n    if(greater(activity('Check overall failed count').output.firstRow.count_failed, 0), 'Failed', 'SUCCESS')\n} || @{pipeline().DataFactory}",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Check overall failed count",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderQuery": {
+									"value": "SELECT COUNT(*) as count_failed FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().parameters.pipelinerunid}'\nAND status != 'SUCCESS';",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "AzureSqlTableds",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Logic App body",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Read All tables status",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "receiver",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set header",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Footer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Email Subject",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "body",
+							"value": {
+								"value": "{\n    \"subject\": \"@{variables('email_subject')}\",\n    \"email_recipent\": \"@{variables('receiveraddress')}\",\n    \"body_header\": \"@{variables('header')}\",\n    \"body_footer\": \"@{variables('footer')}\",\n    \"status_table\": @{activity('Read All tables status').output.value}\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"pipelinerunid": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"receiveraddress": {
+						"type": "String"
+					},
+					"header": {
+						"type": "String"
+					},
+					"footer": {
+						"type": "String"
+					},
+					"email_subject": {
+						"type": "String"
+					},
+					"body": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTableds')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Master PL')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -138,6 +392,35 @@
 								}
 							}
 						}
+					},
+					{
+						"name": "GMAIL_PIPELINE",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "SILVER TO GOLD PL",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "Gmail Pipeline",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"pipelinerunid": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						}
 					}
 				],
 				"policy": {
@@ -147,7 +430,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/PL_SOURCE_TO_SILVER_MAIN')]",
-				"[concat(variables('factoryId'), '/pipelines/PL_SILVER_TO_GOLD')]"
+				"[concat(variables('factoryId'), '/pipelines/PL_SILVER_TO_GOLD')]",
+				"[concat(variables('factoryId'), '/pipelines/Gmail Pipeline')]"
 			]
 		},
 		{
