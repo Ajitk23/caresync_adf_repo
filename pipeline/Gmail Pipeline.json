@@ -24,19 +24,7 @@
 				"type": "WebActivity",
 				"dependsOn": [
 					{
-						"activity": "receiver",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Set header",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Set Footer",
+						"activity": "Logic App body",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -52,9 +40,8 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "POST",
-					"url": "https://prod-12.northcentralus.logic.azure.com:443/workflows/8f00ab36bf4f4a68924d30beb6d650ee/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=DT0EHb7z7G2opjll4kGOJeCYa07Tc-80BnSX3QhWJHQ",
-					"body": {
-						"value": "{\n    \"Header\" : \"@{variables('header')}\",\n    \"Footer\" : \"@{variables('footer')}\",\n    \"Azure DataFactory Name\" : \"@{pipeline().DataFactory}\",\n    \"Receiver Address\" : \"@{pipeline().globalParameters.receiver}\",\n    \"pipeline Name\" : \"@{pipeline().Pipeline}\",\n    \"Pipeline RunID\" : \"@{pipeline().RunId}\",\n    \"pipeline Status\" : \"SUCCESS\",\n    \"Status Record Time\" : \"@{utcNow()}\",\n    \"Fail Record\" : \"@{activity('Table output').output.record_count}\"\n}",
+					"url": {
+						"value": "@pipeline().globalParameters.LogicAppURL",
 						"type": "Expression"
 					}
 				}
@@ -121,6 +108,106 @@
 					},
 					"firstRowOnly": false
 				}
+			},
+			{
+				"name": "Email Subject",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Check overall failed count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "email_subject",
+					"value": {
+						"value": "@{pipeline().globalParameters.ENV} || @{\n    if(greater(activity('Check overall failed count').output.firstRow.count_failed, 0), 'Failed', 'SUCCESS')\n} || @{pipeline().DataFactory}",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Check overall failed count",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "SELECT COUNT(*) as count_failed FROM ctrl.audit_log\nWHERE adf_run_id = '@{pipeline().parameters.pipelinerunid}'\nAND status != 'SUCCESS';",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AzureSqlTableds",
+						"type": "DatasetReference"
+					}
+				}
+			},
+			{
+				"name": "Logic App body",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Read All tables status",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "receiver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set header",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Footer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Email Subject",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "body",
+					"value": {
+						"value": "{\n    \"subject\" : \"@{variables('email_subject')}\",\n    \"email_recipent\" : \"@{variables('receiveraddress')}\",\n    \"body_header\" : \"@{variables('header')}\",\n    \"body_footer\" : \"@{variables('footer')}\",\n    \"status_table\" : @{activity('Read All tables status').output.value}\n}",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -136,6 +223,12 @@
 				"type": "String"
 			},
 			"footer": {
+				"type": "String"
+			},
+			"email_subject": {
+				"type": "String"
+			},
+			"body": {
 				"type": "String"
 			}
 		},
