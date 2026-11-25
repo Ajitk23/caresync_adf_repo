@@ -82,6 +82,35 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "GMAIL_PIPELINE",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "SILVER TO GOLD PL",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "Gmail Pipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pipelinerunid": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
 		"annotations": []
