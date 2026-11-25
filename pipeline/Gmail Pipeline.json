@@ -40,8 +40,15 @@
 				"userProperties": [],
 				"typeProperties": {
 					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
 					"url": {
 						"value": "@pipeline().globalParameters.LogicAppURL",
+						"type": "Expression"
+					},
+					"body": {
+						"value": "@variables('body')",
 						"type": "Expression"
 					}
 				}
