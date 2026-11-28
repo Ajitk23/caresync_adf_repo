@@ -166,7 +166,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "UPDATE ctrl.audit_log SET \nstatus = 'Success',\nend_time = SYSUTCDATETIME(),\nrecords_written = @{activity('BronzeToSilver').output.runOutput}\nWHERE adf_run_id = '@{pipeline().parameters.adf_run_id}'\nAND table_id = @{pipeline().parameters.table_id};",
+								"value": "UPDATE ctrl.audit_log SET \nstatus = 'SUCCESS',\nend_time = SYSUTCDATETIME(),\nrecords_written = @{activity('BronzeToSilver').output.runOutput}\nWHERE adf_run_id = '@{pipeline().parameters.adf_run_id}'\nAND table_id = @{pipeline().parameters.table_id};",
 								"type": "Expression"
 							}
 						}
